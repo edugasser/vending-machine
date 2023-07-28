@@ -3,7 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 import { UserProps } from './components/cash';
 
 const initialState: UserProps = {
-    full_name: "",
+    user_name: "",
     balance: 0
 }
 
@@ -12,13 +12,13 @@ export const cashSlice = createSlice({
     initialState,
     reducers: {
         setUserName: (state, action: PayloadAction<string>) => {
-            state.full_name = action.payload
+            state.user_name = action.payload
         },
         setBalance: (state, action: PayloadAction<number>) => {
             state.balance = action.payload
         },
         resetState: (state) => {
-            state.full_name = initialState.full_name;
+            state.user_name = initialState.user_name;
             state.balance = initialState.balance;
         }
     }

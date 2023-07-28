@@ -8,23 +8,23 @@ import { setBalance } from "../cashSlice";
 import { useCallback, useEffect } from "react";
 
 export interface UserProps {
-  full_name: string;
+  user_name: string;
   balance: number;
 }
 
 export interface NameProps {
-  full_name: string;
+  user_name: string;
 }
 
 export interface BalanceProps {
   balance: number;
 }
 
-export const Name = ({ full_name }: NameProps) => {
+export const Name = ({ user_name }: NameProps) => {
   return (
     <Box className="name">
       <Box>
-        <h3>{full_name}</h3>
+        <h3>{user_name}</h3>
       </Box>
     </Box>
   );
@@ -104,10 +104,14 @@ export const Cash = () => {
     (state: RootState) => state.cashReducer.balance
   ) as number;
 
+  let user_name = useSelector(
+    (state: RootState) => state.cashReducer.user_name
+  )
+
   return (
     <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
       <Grid item xs={12}>
-        <Name full_name="Edu Gasser" />
+        <Name user_name={user_name} />
       </Grid>
       <Grid item xs={12}>
         <Money balance={balance} />
