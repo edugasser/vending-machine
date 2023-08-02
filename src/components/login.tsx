@@ -1,14 +1,15 @@
 import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
 import "../styles/products.scss";
 import { Grid, Input } from "@mui/material";
 import "../styles/products.scss";
-import { setBalance, setUserName } from "../cashSlice";
+import { setBalance, setUserName, setFullName } from "../cashSlice";
 import data_mock from "../mocks/login.json";
 import { useCallback, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
+import { api } from "../api";
+
+
 
 export const Login = () => {
   const [userNameValue, setUserNameValue] = useState("");
@@ -23,7 +24,7 @@ export const Login = () => {
 
   const simulateRequest = (
     mock: any
-  ): Promise<{ exists: boolean; balance: number }> => {
+  ): Promise<{ full_name: string; balance: number }> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(mock);
@@ -34,16 +35,14 @@ export const Login = () => {
   const login = useCallback(async () => {
     if (userNameValue) {
       try {
-        //let products_list = await api.getProducts();
-        let user_response = await simulateRequest(data_mock);
-       
-        if (!user_response.exists) {
-          setError("No exists");
-        } else {
-          dispatch(setUserName(userNameValue));
-          dispatch(setBalance(user_response.balance));
-          navigate('/vending-machine'); 
-        }
+        let user_response = await api.login(userNameValue);
+        //let user_response = await simulateRequest(data_mock);
+
+        dispatch(setUserName(userNameValue));
+        dispatch(setFullName(user_response.full_name));
+        dispatch(setBalance(user_response.balance));
+        navigate('/vending-machine'); 
+
       } catch (error) {
         setError(`An error occurred: ${error}`);
       }

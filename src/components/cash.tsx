@@ -6,25 +6,30 @@ import { RootState } from "../store";
 import { useDispatch, useSelector } from "react-redux";
 import { setBalance } from "../cashSlice";
 import { useCallback, useEffect } from "react";
+import add_data_mock from "../mocks/add_balance.json";
+import refund_data_mock from "../mocks/refund_balance.json";
+import { api } from "../api";
+
 
 export interface UserProps {
-  user_name: string;
+  full_name: string;
+  username: string;
   balance: number;
 }
 
 export interface NameProps {
-  user_name: string;
+  full_name: string;
 }
 
 export interface BalanceProps {
   balance: number;
 }
 
-export const Name = ({ user_name }: NameProps) => {
+export const Name = ({ full_name }: NameProps) => {
   return (
     <Box className="name">
       <Box>
-        <h3>{user_name}</h3>
+        <h3>{full_name}</h3>
       </Box>
     </Box>
   );
@@ -33,13 +38,32 @@ export const Name = ({ user_name }: NameProps) => {
 export const Money = ({ balance }: BalanceProps) => {
   const dispatch = useDispatch();
 
-  const updateBalance = useCallback(
-    (amount: number) => {
-      let new_balance: number = balance + amount;
-      dispatch(setBalance(new_balance));
-      // TODO: save it in BE as well
+  const username = useSelector(
+    (state: RootState) => state.cashReducer.username
+  );
+
+  const simulateRequest = (
+    mock: any
+  ): Promise<any> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mock);
+      }, 1000);
+    });
+  };
+
+  const addBalance = useCallback(
+    async (amount: number) => {
+      try {
+        let response = await api.add(username, amount);
+        //let response = await simulateRequest(add_data_mock);
+        dispatch(setBalance(response.balance));
+      } catch (error) {
+        console.log("ERROR");
+      }
+
     },
-    [dispatch, balance]
+    [dispatch, username]
   );
 
   return (
@@ -53,22 +77,22 @@ export const Money = ({ balance }: BalanceProps) => {
         <h3>Add money</h3>
       </Grid>
       <Grid item xs={4}>
-        <Button onClick={() => updateBalance(0.1)}>0.10€</Button>
+        <Button onClick={() => addBalance(0.1)}>0.10€</Button>
       </Grid>
       <Grid item xs={4}>
-        <Button onClick={() => updateBalance(0.2)}>0.20€</Button>
+        <Button onClick={() => addBalance(0.2)}>0.20€</Button>
       </Grid>
       <Grid item xs={4}>
-        <Button onClick={() => updateBalance(0.5)}>0.50€</Button>
+        <Button onClick={() => addBalance(0.5)}>0.50€</Button>
       </Grid>
       <Grid item xs={4}>
-        <Button onClick={() => updateBalance(1)}>1€</Button>
+        <Button onClick={() => addBalance(1)}>1€</Button>
       </Grid>
       <Grid item xs={4}>
-        <Button onClick={() => updateBalance(2)}>2€</Button>
+        <Button onClick={() => addBalance(2)}>2€</Button>
       </Grid>
       <Grid item xs={4}>
-        <Button onClick={() => updateBalance(5)}>5€</Button>
+        <Button onClick={() => addBalance(5)}>5€</Button>
       </Grid>
     </Grid>
   );
@@ -77,9 +101,31 @@ export const Money = ({ balance }: BalanceProps) => {
 export const Balance = ({ balance }: BalanceProps) => {
   const dispatch = useDispatch();
 
-  const refundMoney = useCallback(() => {
-    dispatch(setBalance(0));
-    // TODO: save it in BE as well
+  const username = useSelector(
+    (state: RootState) => state.cashReducer.username
+  );
+
+  const simulateRequest = (
+    mock: any
+  ): Promise<any> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mock);
+      }, 1000);
+    });
+  };
+
+  
+  const refundMoney = useCallback(async () => {
+    try {
+      let response = await api.refund(username);
+      //let response = await simulateRequest(refund_data_mock);
+      console.log("REFUND", response);
+
+      dispatch(setBalance(response.balance));
+    } catch (error) {
+      console.log("ERROR");
+    }
   }, [dispatch]);
 
   return (
@@ -105,13 +151,13 @@ export const Cash = () => {
   ) as number;
 
   let user_name = useSelector(
-    (state: RootState) => state.cashReducer.user_name
+    (state: RootState) => state.cashReducer.full_name
   )
 
   return (
     <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
       <Grid item xs={12}>
-        <Name user_name={user_name} />
+        <Name full_name={user_name} />
       </Grid>
       <Grid item xs={12}>
         <Money balance={balance} />

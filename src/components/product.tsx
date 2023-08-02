@@ -4,31 +4,65 @@ import "../styles/products.scss";
 import { Grid } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
-import data_mock from "../mocks/api_response.json";
+import add_data_mock from "../mocks/add_balance.json";
+import products_data_mock from "../mocks/api_response.json";
+
 import { setBalance } from "../cashSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 
 export interface ProductProps {
-  title: string;
-  price: number;
-  balance: number;
+  id: string;
+  coordinates: number[];
+  quantity: number;
+  product: {
+    name: string,
+    price: number
+  }
 }
 
-export const Product = ({ title, price, balance }: ProductProps) => {
+export interface ProductComponentProps {
+  id: string;
+  balance: number;
+  title: string;
+  price: number;
+  quantity: number;
+}
+
+export const Product = ({ id, balance, title, price, quantity }: ProductComponentProps) => {
   const dispatch = useDispatch();
 
-  function canBuyProduct(balance: number, price: number) {
-    return balance - price >= 0 ? true : false;
+  const username = useSelector(
+    (state: RootState) => state.cashReducer.username
+  );
+
+  function canBuyProduct(balance: number, price: number, quantity: number) {
+    return (balance - price >= 0 && quantity > 0) ? true : false;
   };
 
 
-  const buyProduct = useCallback((title: string, price: number) => {
-      let new_balance: number = balance - price;
-      dispatch(setBalance(new_balance));
-      // TODO: save it in BE as well
-    },
-    [dispatch, balance]
+  const simulateRequest = (
+    mock: any
+  ): Promise<any> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mock);
+      }, 1000);
+    });
+  };
+
+
+  const buyProduct = useCallback(async (id: string) => {
+    try {
+      let response = await api.buy(username, id);
+      //let response = await simulateRequest(add_data_mock);
+      console.log("BUY; ", response);
+      dispatch(setBalance(response.balance));
+    } catch (error) {
+      console.log("ERROR");
+    }
+  },
+    [dispatch, username]
   );
 
   return (
@@ -39,7 +73,7 @@ export const Product = ({ title, price, balance }: ProductProps) => {
       <Box>
         <h4>{price}€</h4>
       </Box>
-      <Button disabled={!canBuyProduct(balance, price)} onClick={() => buyProduct(title, price)}>Buy</Button>
+      <Button disabled={!canBuyProduct(balance, price, quantity)} onClick={() => buyProduct(id)}>Buy</Button>
     </Box>
   );
 };
@@ -54,7 +88,7 @@ export const Products = () => {
 
   const simulateRequest = (
     mock: any
-  ): Promise<{ products: ProductProps[] }> => {
+  ): Promise<ProductProps[]> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(mock);
@@ -64,9 +98,9 @@ export const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      //let products_list = await api.getProducts();
-      let products_list = await simulateRequest(data_mock);
-      setProducts(products_list.products);
+      let products_list = await api.getProducts();
+      //let products_list = await simulateRequest(products_data_mock);
+      setProducts(products_list);
     } catch (error) {
       setError(`An error occurred: ${error}`);
     }
@@ -81,9 +115,9 @@ export const Products = () => {
   return (
     <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
       {products &&
-        products.map((product: ProductProps) => (
+        products.map((data: ProductProps) => (
           <Grid item xs={4}>
-            <Product title={product.title} price={product.price} balance={balance} />
+            <Product quantity={data.quantity} id={data.id} title={data.product.name} price={data.product.price} balance={balance} />
           </Grid>
         ))}
     </Grid>
